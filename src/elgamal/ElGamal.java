@@ -1,79 +1,105 @@
 package elgamal;
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
+import java.util.Random;
 
 public class ElGamal {
 
-    // Khai báo các thành phần của khóa ElGamal
-    private BigInteger p; // Prime number
-    private BigInteger g; // Generator
-    private BigInteger x; // Private key
-    private BigInteger y; // Public key
+    // Số nguyên tố p nhỏ
+    private static final int p = 23;
 
-    // Hàm khởi tạo để tạo ra cặp khóa ElGamal
-    public ElGamal(int bitLength) {
-        // Khởi tạo đối tượng SecureRandom để sinh số ngẫu nhiên
-        SecureRandom random = new SecureRandom();
+    // Phần tử gốc của nhóm
+    private static final int g = 5;
 
-        // Sinh số nguyên tố lớn p và q
-        p = BigInteger.probablePrime(bitLength, random);
+    // Hàm sinh cặp khóa
+    public static int[] generateKeyPair() {
+        Random random = new Random();
 
-        // Sinh số nguyên tố g, là một nguyên tố nguyên tố của p-1
-        g = BigInteger.valueOf(2);
-        while (g.compareTo(p.subtract(BigInteger.ONE)) >= 0) {
-            g = BigInteger.probablePrime(bitLength, random);
-        }
+        // Chọn số ngẫu nhiên x trong đoạn [2, p - 2]
+        int x = random.nextInt(p - 3) + 2;
 
-        // Sinh khóa bí mật x, là một số nguyên ngẫu nhiên nhỏ hơn p
-        x = new BigInteger(bitLength, random);
-        while (x.compareTo(p) >= 0) {
-            x = new BigInteger(bitLength, random);
-        }
+        // Tính y = g^x mod p
+        int y = modPow(g, x, p);
 
-        // Tính khóa công khai y
-        y = g.modPow(x, p);
+        return new int[]{y, x};
     }
 
-    // Phương thức để mã hóa thông điệp
-    public BigInteger[] encrypt(BigInteger message) {
-        SecureRandom random = new SecureRandom();
-        BigInteger k;
-        do {
-            k = new BigInteger(p.bitLength(), random);
-        } while (k.compareTo(p.subtract(BigInteger.ONE)) >= 0 || k.compareTo(BigInteger.TWO) <= 0);
+    // Hàm mã hóa
+    public static int[] encrypt(int publicKey, int plaintext) {
+        Random random = new Random();
 
-        BigInteger a = g.modPow(k, p);
-        BigInteger b = message.multiply(y.modPow(k, p)).mod(p);
-        return new BigInteger[]{a, b};
+        // Chọn số ngẫu nhiên k trong đoạn [1, p - 2]
+        int k = random.nextInt(p - 2) + 1;
+
+        // Tính c1 = g^k mod p
+        int c1 = modPow(g, k, p);
+
+        // Tính c2 = (plaintext * publicKey^k) mod p
+        int c2 = (plaintext * modPow(publicKey, k, p)) % p;
+
+        return new int[]{c1, c2};
     }
 
-    // Phương thức để giải mã bản mã ElGamal
-    public BigInteger decrypt(BigInteger[] ciphertext) {
-        BigInteger a = ciphertext[0];
-        BigInteger b = ciphertext[1];
-        BigInteger s = a.modPow(x, p);
-        BigInteger inverseS = s.modInverse(p);
-        return b.multiply(inverseS).mod(p);
+    // Hàm giải mã
+    public static int decrypt(int privateKey, int[] ciphertext) {
+        int c1 = ciphertext[0];
+        int c2 = ciphertext[1];
+
+        // Tính c1^x mod p
+        int c1PowX = modPow(c1, privateKey, p);
+
+        // Tính phần tử nghịch đảo của c1^x mod p
+        int c1Inverse = modInverse(c1PowX, p);
+
+        // Giải mã: M = c2 * (c1^x)^(-1) mod p
+        int decrypted = (c2 * c1Inverse) % p;
+        if (decrypted < 0) {
+            decrypted += p;
+        }
+        return decrypted;
+    }
+
+    // Hàm tính a^b mod m
+    private static int modPow(int a, int b, int m) {
+        int result = 1;
+        a = a % m;
+        while (b > 0) {
+            if ((b & 1) == 1) {
+                result = (result * a) % m;
+            }
+            b >>= 1;
+            a = (a * a) % m;
+        }
+        return result;
+    }
+
+    // Hàm tính phần tử nghịch đảo mod m
+    private static int modInverse(int a, int m) {
+        a = a % m;
+        for (int x = 1; x < m; x++) {
+            if ((a * x) % m == 1) {
+                return x;
+            }
+        }
+        return -1; // Không tồn tại phần tử nghịch đảo
     }
 
     public static void main(String[] args) {
-        // Khởi tạo đối tượng ElGamal với độ dài khóa là 128 bit
-        ElGamal elGamal = new ElGamal(128);
+        // Sinh cặp khóa
+        int[] keyPair = generateKeyPair();
+        int publicKey = keyPair[0];
+        int privateKey = keyPair[1];
 
-        // Thông điệp cần mã hóa
-        BigInteger message = new BigInteger("12345");
+        // Tin nhắn cần mã hóa
+        int plaintext = 10;
 
-        // Mã hóa thông điệp
-        BigInteger[] ciphertext = elGamal.encrypt(message);
+        // Mã hóa
+        int[] ciphertext = encrypt(publicKey, plaintext);
 
-        // Hiển thị bản mã ElGamal
-        System.out.println("Ciphertext: (" + ciphertext[0] + ", " + ciphertext[1] + ")");
+        // Giải mã
+        int decryptedPlaintext = decrypt(privateKey, ciphertext);
 
-        // Giải mã bản mã ElGamal
-        BigInteger decryptedMessage = elGamal.decrypt(ciphertext);
-
-        // Hiển thị thông điệp đã giải mã
-        System.out.println("Decrypted message: " + decryptedMessage);
+        // In ra kết quả
+        System.out.println("Tin nhắn gốc: " + plaintext);
+        System.out.println("Tin nhắn đã giải mã: " + decryptedPlaintext);
     }
 }

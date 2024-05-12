@@ -1,5 +1,7 @@
 package rsa;
 
+import util.Util;
+
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
@@ -32,11 +34,11 @@ public class RSA {
     }
 
     public byte[] encrypt(byte[] message) {
-        return (new BigInteger(message)).modPow(publicKey, modulus).toByteArray();
+        return new BigInteger(String.valueOf(Util.modPow(message, publicKey, modulus))).toByteArray();
     }
 
     public byte[] decrypt(byte[] encryptedMessage) {
-        return new BigInteger(encryptedMessage).modPow(privateKey, modulus).toByteArray();
+        return new BigInteger(String.valueOf(Util.modPow(encryptedMessage, privateKey, modulus))).toByteArray();
     }
 
     public static void main(String[] args) {

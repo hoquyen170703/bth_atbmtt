@@ -1,5 +1,7 @@
 package util;
 
+import java.math.BigInteger;
+
 public class Util {
     public static Integer gcd(Integer a, Integer b) {
         if (b == 0)
@@ -8,19 +10,20 @@ public class Util {
 
     }
 
-    public static Integer modInverse(Integer a, Integer n) {
-        int r0 = n;
-        int r1 = a;
-        int x0 = 1;
-        int x1 = 0;
-        int y0 = 0;
-        int y1 = 1;
 
-        while (r1 != 0) {
-            int q = r0 / r1;
-            int r2 = r0 - q * r1;
-            int x2 = x0 - q * x1;
-            int y2 = y0 - q * y1;
+    public static BigInteger modInverse(BigInteger a, BigInteger n) {
+        BigInteger r0 = n;
+        BigInteger r1 = a;
+        BigInteger x0 = BigInteger.ONE;
+        BigInteger x1 = BigInteger.ZERO;
+        BigInteger y0 = BigInteger.ZERO;
+        BigInteger y1 = BigInteger.ONE;
+
+        while (!r1.equals(BigInteger.ZERO)) {
+            BigInteger q = r0.divide(r1);
+            BigInteger r2 = r0.subtract(q.multiply(r1));
+            BigInteger x2 = x0.subtract(q.multiply(x1));
+            BigInteger y2 = y0.subtract(q.multiply(y1));
 
             r0 = r1;
             r1 = r2;
@@ -30,24 +33,28 @@ public class Util {
             y1 = y2;
         }
 
-        if (r0 != 1)
-            return -1; // Không tồn tại phần tử nghịch đảo
+        if (!r0.equals(BigInteger.ONE))
+            return BigInteger.valueOf(-1); // Không tồn tại phần tử nghịch đảo
 
-        if (x0 < 0)
-            x0 += n;
+        if (x0.compareTo(BigInteger.ZERO) < 0)
+            x0 = x0.add(n);
         return x0;
 
     }
 
-    public static Integer modPow(Integer a, Integer b, Integer n) {
-        int f = 1;
-        while (b > 0) {
-            if ((b & 1) == 1) {
-                f = (f * a) % n;
+
+    public static BigInteger modPow(byte[] a, BigInteger b, BigInteger n) {
+        BigInteger f = BigInteger.ONE;
+        BigInteger base = new BigInteger(a);
+
+        while (b.compareTo(BigInteger.ZERO) > 0) {
+            if (b.testBit(0)) {
+                f = f.multiply(base).mod(n);
             }
-            a = (a * a) % n;
-            b >>= 1;
+            base = base.multiply(base).mod(n);
+            b = b.shiftRight(1);
         }
         return f;
     }
+
 }

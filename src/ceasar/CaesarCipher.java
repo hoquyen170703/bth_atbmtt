@@ -2,48 +2,52 @@ package ceasar;
 
 public class CaesarCipher {
 
-    // Hàm mã hoá Caesar Cipher
+    // Bảng chữ cái tiếng Việt
+    private static final String VIETNAMESE_ALPHABET = "aáàảãạăắằẳẵặâấầẩẫậbcdđeéèẻẽẹêếềểễệfghiíìỉĩịjklmnoóòỏõọôốồổỗộơớờởỡợpqrstuúùủũụưứừửữựvwxyýỳỷỹỵz ";
+
+    // Hàm mã hóa văn bản tiếng Việt bằng thuật toán Caesar
     public static String encrypt(String plaintext, int shift) {
-        StringBuilder ciphertext = new StringBuilder();
-        plaintext = plaintext.toLowerCase(); // Chuyển đổi văn bản thành chữ thường
+        StringBuilder encryptedText = new StringBuilder();
+
+        // Chuyển đổi vị trí về phạm vi dương
+        shift = shift % VIETNAMESE_ALPHABET.length();
+        if (shift < 0) {
+            shift += VIETNAMESE_ALPHABET.length();
+        }
 
         for (int i = 0; i < plaintext.length(); i++) {
-            char ch = plaintext.charAt(i);
-            if (Character.isLetter(ch)) {
-                char shiftedChar = (char) ('a' + (ch - 'a' + shift) % 26); // Áp dụng phép dịch
-                ciphertext.append(shiftedChar);
+            char currentChar = plaintext.charAt(i);
+            int index = VIETNAMESE_ALPHABET.indexOf(currentChar);
+            if (index != -1) {
+                int encryptedIndex = (index + shift) % VIETNAMESE_ALPHABET.length();
+                encryptedText.append(VIETNAMESE_ALPHABET.charAt(encryptedIndex));
             } else {
-                ciphertext.append(ch); // Giữ nguyên các ký tự không phải là chữ cái
+                // Giữ nguyên ký tự không thuộc bảng chữ cái tiếng Việt
+                encryptedText.append(currentChar);
             }
         }
 
-        return ciphertext.toString();
+        return encryptedText.toString();
     }
 
+    // Hàm giải mã văn bản tiếng Việt bằng thuật toán Caesar
     public static String decrypt(String ciphertext, int shift) {
-        StringBuilder plaintext = new StringBuilder();
-        ciphertext = ciphertext.toLowerCase(); // Chuyển đổi văn bản mã hoá thành chữ thường
-
-        for (int i = 0; i < ciphertext.length(); i++) {
-            char ch = ciphertext.charAt(i);
-            if (Character.isLetter(ch)) {
-                char shiftedChar = (char) ('a' + (ch - 'a' - shift + 26) % 26); // Áp dụng phép dịch ngược
-                plaintext.append(shiftedChar);
-            } else {
-                plaintext.append(ch); // Giữ nguyên các ký tự không phải là chữ cái
-            }
-        }
-
-        return plaintext.toString();
+        return encrypt(ciphertext, -shift);
     }
 
     public static void main(String[] args) {
-        String plaintext = "Chao mung ban den voi abc";
-        int shift = 3; // Số lượng ký tự dịch chuyển
+        // Văn bản cần mã hóa và giải mã
+        String plaintext = "xin chào, đây là một ví dụ về mã hóa và giải mã Caesar";
+
+        // Số lượng dịch chuyển
+        int shift = 3;
+
+        // Mã hóa văn bản
         String encryptedText = encrypt(plaintext, shift);
+        System.out.println("Văn bản đã mã hóa: " + encryptedText);
+
+        // Giải mã văn bản
         String decryptedText = decrypt(encryptedText, shift);
-        System.out.println("Plaintext: " + plaintext);
-        System.out.println("Encrypted text: " + encryptedText);
-        System.out.println("Decrypted text: " + decryptedText);
+        System.out.println("Văn bản đã giải mã: " + decryptedText);
     }
 }
