@@ -14,22 +14,22 @@ public class RSA {
     public RSA(int bitLength) {
         SecureRandom random = new SecureRandom();
 
-        // Sinh 2 so nguyen to ngau nhien
+
         BigInteger p = BigInteger.probablePrime(bitLength / 2, random);
         BigInteger q = BigInteger.probablePrime(bitLength / 2, random);
 
-        // Tinh n
+
         modulus = p.multiply(q);
 
-        // Tinh phi
+
         BigInteger phi = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
 
-        // Chon so nguyen to ngau nhien
+
         do {
             publicKey = new BigInteger(bitLength, random);
         } while (publicKey.compareTo(BigInteger.ONE) <= 0 || publicKey.compareTo(phi) >= 0 || !publicKey.gcd(phi).equals(BigInteger.ONE));
 
-        // tinh privateKey
+
         privateKey = publicKey.modInverse(phi);
     }
 
